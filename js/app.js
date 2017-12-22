@@ -61,6 +61,7 @@ demoModule.directive('uiPicture', ['$rootScope', '$modal',
 				var pageOptions = {
 					currentPage: 0,
 					pageSize: 5,
+					totalPage: 1,
 					initPageFlag: true
 				};
 				//template
@@ -153,7 +154,7 @@ demoModule.directive('uiPicture', ['$rootScope', '$modal',
 				//删除图片
 				function _onDelFile(target) {
 					console.log('_onDelFile')
-					
+
 					/* var modalInstance = $modal.open({
 						templateUrl: require('./del.html'),
 						controller: function ($scope, $modalInstance) {
@@ -191,6 +192,16 @@ demoModule.directive('uiPicture', ['$rootScope', '$modal',
 							$fileLi.remove();
 							//从列表中删除
 							fileList.splice(picIndex, 1);
+							// 删除后刷新图片li
+							if (pageOptions.currentPage !== pageOptions.totalPage - 1) {
+								initPager(true);
+							} else {
+								// 最后一张图片删除，返回上一页
+								if ($listEl.find('li').length % pageOptions.pageSize === 0) {
+									pageOptions.currentPage--;
+									initPager(true);
+								}
+							}
 							_rebuildValue();
 						}
 					});
@@ -884,21 +895,22 @@ demoModule.directive('uiPicture', ['$rootScope', '$modal',
 				 * 图片list翻页效果
 				 * @returns
 				 */
-				function initPager() {
+				function initPager(flag) {
 					var $ps_next = $previewEl.find('.ps_next'),
 						$ps_prev = $previewEl.find('.ps_prev'),
 						$ps_list = $listEl.find('li'),
 						total_images = $ps_list.length,
 						currentHovered = -1,
 						pageSize = pageOptions.pageSize,
-						_currentPage = pageOptions.currentPage ? pageOptions.currentPage : 1,
+						// _currentPage = pageOptions.currentPage ? pageOptions.currentPage : 1,
 						totalPage = Math.ceil(total_images / pageSize),
 						$currentImage = [];
+					pageOptions.totalPage = totalPage;
 					if (total_images <= pageSize) { //图片个数少于翻页数，则隐藏
 						$page_arr.hide()
-						return;
+					} else {
+						$page_arr.show();
 					}
-					$page_arr.show();
 					var showImage = function (len) {
 						len = len ? len : 0;
 						var idx = pageOptions.currentPage * pageSize + len;
@@ -935,7 +947,7 @@ demoModule.directive('uiPicture', ['$rootScope', '$modal',
 
 					function prevImage() {
 						if (pageOptions.currentPage > 0) {
-							showImage(-4);
+							showImage(-pageSize);
 							pageOptions.currentPage--;
 						}
 					}
@@ -944,6 +956,9 @@ demoModule.directive('uiPicture', ['$rootScope', '$modal',
 					if (pageOptions.initPageFlag) {
 						showImage();
 						pageOptions.initPageFlag = false;
+					}
+					if (flag) {
+						showImage();
 					}
 				}
 			}
